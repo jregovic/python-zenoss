@@ -1,5 +1,6 @@
 '''Python module to work with the Zenoss JSON API
 '''
+import ssl
 import ast
 import re
 import json
@@ -8,7 +9,6 @@ import requests
 
 log = logging.getLogger(__name__) # pylint: disable=C0103
 requests.packages.urllib3.disable_warnings()
-
 ROUTERS = {'MessagingRouter': 'messaging',
            'EventsRouter': 'evconsole',
            'EventClassesRouter': 'Events/evclasses',
@@ -94,6 +94,8 @@ class Zenoss(object):
 
         '''
         log.info('Getting all devices')
+        if not device_class.startswith('/zport/dmd/Devices'):
+            device_class = '/zport/dmd/Devices' + device_class
         return self.__router_request('DeviceRouter', 'getDevices',
                                      data=[{'uid': device_class, 'params': {}, 'limit': limit}])
 
@@ -139,6 +141,7 @@ class Zenoss(object):
 
         '''
         log.info('Adding %s', device_name)
+        
         data = dict(deviceName=device_name, deviceClass=device_class, model=True, collector=collector)
         return self.__router_request('DeviceRouter', 'addDevice', [data])
 
@@ -1025,3 +1028,59 @@ class Zenoss(object):
         if users:
             data['users'] = users
         return self.__router_request('TriggersRouter', 'updateTrigger', [data])
+#MIB functions
+    def get_mib_tree(self, id='/zport/dmd/Mibs'):
+        data = id
+        return self.__router_request('MibRouter', 'getTree', [data])
+    def get_mib_organizer_tree(self,id):
+        data=id
+        return self.__router_request('MibRouter', 'getOrganizerTree', [data])
+    def addNode(self, contextUid='', id='', nodetype=''):
+        data=dict(
+            contextUid=contextUid,
+            id=id,
+            type=nodetype
+        )
+        return self.__router_request('MibRouter', 'addNode', [data])
+    def addMIB(self, package, organizer='/'):
+        return
+    def deleteNode(self, uid):
+        return
+    def moveNode(self, uids, target):
+        return
+    def getInfo(self, uid, useFieldSets=True):
+        return
+    def setInfo(self, **data):
+        return
+    def addOidMapping(self, uid, id, oid, nodetype='node'):
+        return
+    def addTrap(self, uid, id, oid, nodetype='notification'):
+        return
+    def deleteOidMapping(self, uid):	
+        return
+    def deleteTrap(self, uid):
+        return
+    def getOidMappings(self, uid, dir='ASC', sort='name', start=0, page=None, limit=256):
+        data = dict(
+            uid=uid,
+            dir=dir,
+            sort=sort,
+            start=start,
+            page=page,
+            limit=limit
+        )
+        return self.__router_request('MibRouter', 'getOidMappings', [data])	
+    def getTraps(self, uid, dir='ASC', sort='name', start=0, page=None, limit=256):
+        data = dict(
+            uid=uid,
+            dir=dir,
+            sort=sort,
+            start=start,
+            page=page,
+            limit=limit
+        )
+        return self.__router_request('MibRouter', 'getTraps', [data])
+    def getMibNodeTree(self, id=None):
+        return
+    def getMibTrapTree(self, id=None):
+        return
